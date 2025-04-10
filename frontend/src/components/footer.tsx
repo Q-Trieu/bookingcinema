@@ -18,7 +18,7 @@ const Footer: React.FC = () => {
         {/* Phần logo tròn */}
         <div className="mt-6 md:mt-0">
           <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-white flex items-center justify-center">
-            <span className="text-[#800000] font-bold">CINEMA</span>
+            <span className="text-[#800000] font-bold text-xs">CINEMA</span>
           </div>
         </div>
       </div>

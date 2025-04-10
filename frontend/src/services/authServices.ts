@@ -55,7 +55,7 @@ export const logout = async (): Promise<void> => {
   }
 };
 
-export const FacebookLogin = async ( accessToken: string): Promise<AuthResponse> => {
+export const facebookLogin = async ( accessToken: string): Promise<AuthResponse> => {
   try {
     const response = await axiosInstance.post("/auth/facebook", { accessToken });
     return response.data;
@@ -64,7 +64,7 @@ export const FacebookLogin = async ( accessToken: string): Promise<AuthResponse>
     throw new Error("Failed to log in with Facebook");
   }
 }
-export const GoogleLogin = async ( accessToken: string): Promise<AuthResponse> => {
+export const googleLogin = async ( accessToken: string): Promise<AuthResponse> => {
   try {
     const response = await axiosInstance.post("/auth/google", { accessToken });
     return response.data;

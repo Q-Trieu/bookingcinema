@@ -1,6 +1,6 @@
 import axiosInstance from "./axiosInstance";
 
-export interface Cinema {
+export interface theater {
   id: number;
   name: string;
   location: string;
@@ -9,7 +9,7 @@ export interface Cinema {
   email: string;
 }
 
-export const getCinemas = async (): Promise<Cinema[]> => {
+export const getTheaters = async (): Promise<theater[]> => {
   try {
     const response = await axiosInstance.get("/cinemas");
     return response.data;
