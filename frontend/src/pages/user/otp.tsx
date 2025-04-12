@@ -1,7 +1,6 @@
 // src/components/OTPPage.tsx
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { sendOtp, verifyOtp, resendOtp } from "../../services/otpServices";
 import axios from "axios";
 
 const OTPPage: React.FC = () => {
