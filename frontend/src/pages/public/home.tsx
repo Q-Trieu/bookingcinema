@@ -128,7 +128,6 @@ const Home: React.FC = () => {
           ),
         ];
         setReleaseYears(years.sort((a, b) => b - a)); // Sắp xếp giảm dần
-
         setMovies(moviesWithShowtimes);
         setFilteredMovies(moviesWithShowtimes);
       } catch (error) {
