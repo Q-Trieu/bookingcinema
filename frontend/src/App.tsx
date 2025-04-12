@@ -4,6 +4,7 @@ import { useAuth } from "./hook/useAuth";
 import { Navigate } from "react-router-dom";
 import LoginForm from "./pages/user/login";
 import RegisterForm from "./pages/user/register";
+import MovieDetailPage from "./pages/public/movieDetail";
 
 function App() {
   const { user } = useAuth();
@@ -16,8 +17,10 @@ function App() {
         element={isAuthenticated ? <Home /> : <Navigate to="/login" />}
       />
       <Route
-        path="/movies/:id"
-        element={isAuthenticated ? <Home /> : <Navigate to="/login" />}
+        path="/movie/:id"
+        element={
+          isAuthenticated ? <MovieDetailPage /> : <Navigate to="/login" />
+        }
       />
       <Route
         path="/movies"

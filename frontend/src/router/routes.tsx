@@ -5,37 +5,37 @@ import Home from "../pages/public/home";
 import MoviePage from "../pages/public/movie";
 import MovieDetailPage from "../pages/public/movieDetail";
 import BookingPage from "../pages/public/booking";
+import NotFound from "../pages/public/notfound";
+import Forbidden from "../pages/public/forbidden";
 
-// User pages
-import PaymentPage from "../pages/user/payment";
+// Auth pages
 import LoginForm from "../pages/user/login";
 import RegisterForm from "../pages/user/register";
 import OTPPage from "../pages/user/otp";
+import PaymentPage from "../pages/user/payment";
 
 // Admin pages
 import Dashboard from "../pages/admin/dashboard";
-import NotFound from "../pages/public/notfound";
+
+// Protected Route Component
+import ProtectedRoute from "./ProtectedRoute";
+
 const router = createBrowserRouter([
+  // Public routes
   {
     path: "/",
     element: <Home />,
   },
   {
-    path: "/movies",
+    path: "/movie",
     element: <MoviePage />,
   },
   {
-    path: "/movies/:id",
+    path: "/movie/:slug",
     element: <MovieDetailPage />,
   },
-  {
-    path: "/booking/:movieId",
-    element: <BookingPage />,
-  },
-  {
-    path: "/payment",
-    element: <PaymentPage />,
-  },
+
+  // Auth routes
   {
     path: "/login",
     element: <LoginForm />,
@@ -48,28 +48,60 @@ const router = createBrowserRouter([
     path: "/verify-otp",
     element: <OTPPage />,
   },
+  {
+    path: "/auth/verify-otp",
+    element: <OTPPage />,
+  },
+  {
+    path: "/auth/login",
+    element: <LoginForm />,
+  },
+  {
+    path: "/auth/register",
+    element: <RegisterForm />,
+  },
+
+  // Protected routes
+  {
+    path: "/booking/:movieId",
+    element: (
+      <ProtectedRoute>
+        <BookingPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/payment",
+    element: (
+      <ProtectedRoute>
+        <PaymentPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/user/payment",
+    element: (
+      <ProtectedRoute>
+        <PaymentPage />
+      </ProtectedRoute>
+    ),
+  },
+
   // Admin routes
   {
     path: "/admin",
-    element: <Dashboard />,
+    element: (
+      <ProtectedRoute requireAdmin={true}>
+        <Dashboard />
+      </ProtectedRoute>
+    ),
   },
+
+  // Error pages
   {
-    path: "/admin/movies",
-    element: <div>Quản lý phim (cần tạo component)</div>,
+    path: "/forbidden",
+    element: <Forbidden />,
   },
-  {
-    path: "/admin/showtimes",
-    element: <div>Quản lý lịch chiếu (cần tạo component)</div>,
-  },
-  {
-    path: "/admin/users",
-    element: <div>Quản lý người dùng (cần tạo component)</div>,
-  },
-  {
-    path: "/admin/bookings",
-    element: <div>Quản lý đặt vé (cần tạo component)</div>,
-  },
-  // Fallback route
   {
     path: "*",
     element: <NotFound />,

@@ -9,17 +9,64 @@ import {
   googleLogin,
   facebookLogin,
 } from "../../services/authServices";
+import logo from "../../assets/logo.png"; // Import logo
 
 const RegisterForm: React.FC = () => {
   const [fullName, setFullName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [phoneNumber, setPhoneNumber] = useState<string>("");
   const [password, setPassword] = useState<string>("");
-  const [errorMessage, setErrorMessage] = useState<string>("");
+  const [errorMessage, setErrorMessage] = useState<string | React.ReactNode>(
+    ""
+  );
   const [successMessage, setSuccessMessage] = useState<string>("");
   const navigate = useNavigate();
 
   const handleRegister = async () => {
+    // Kiểm tra tính hợp lệ của dữ liệu trước khi gửi
+    if (!fullName.trim()) {
+      setErrorMessage("Vui lòng nhập họ và tên");
+      return;
+    }
+
+    if (!email.trim()) {
+      setErrorMessage("Vui lòng nhập email");
+      return;
+    }
+
+    // Kiểm tra định dạng email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setErrorMessage("Email không hợp lệ");
+      return;
+    }
+
+    if (!phoneNumber.trim()) {
+      setErrorMessage("Vui lòng nhập số điện thoại");
+      return;
+    }
+
+    // Kiểm tra định dạng số điện thoại Việt Nam
+    const phoneRegex = /^(0|\+84)(\d{9,10})$/;
+    if (!phoneRegex.test(phoneNumber)) {
+      setErrorMessage("Số điện thoại không hợp lệ");
+      return;
+    }
+
+    if (!password) {
+      setErrorMessage("Vui lòng nhập mật khẩu");
+      return;
+    }
+
+    if (password.length < 6) {
+      setErrorMessage("Mật khẩu phải có ít nhất 6 ký tự");
+      return;
+    }
+
+    // Hiển thị trạng thái đang xử lý
+    setErrorMessage("");
+    setSuccessMessage("Đang xử lý...");
+
     try {
       const authResponse = await registerUser({
         full_name: fullName,
@@ -27,28 +74,80 @@ const RegisterForm: React.FC = () => {
         phone: phoneNumber,
         password,
       });
-      // Lưu token từ authResponse vào localStorage
-      localStorage.setItem("accessToken", authResponse.accessToken);
-      localStorage.setItem("refreshToken", authResponse.refreshToken);
 
-      // Lưu email để trang OTP có thể sử dụng
-      localStorage.setItem("pendingActivationEmail", email);
+      if (authResponse.success && authResponse.data) {
+        // Lưu token từ authResponse vào localStorage
+        localStorage.setItem("accessToken", authResponse.data.accessToken);
+        localStorage.setItem("refreshToken", authResponse.data.refreshToken);
 
-      setSuccessMessage("Đăng ký thành công! Chuyển đến trang xác thực OTP...");
-      setErrorMessage("");
-      console.log("Đăng ký thành công:", authResponse);
+        // Lưu email vào localStorage để trang OTP có thể lấy
+        localStorage.setItem("pendingActivationEmail", email);
 
-      // Chuyển hướng đến trang OTP sau 1.5 giây
-      setTimeout(() => {
-        navigate("/verify-otp");
-      }, 1500);
+        // Thông báo đăng ký thành công và chuyển đến trang xác thực OTP
+        setSuccessMessage(
+          "Đăng ký thành công! Đang chuyển đến trang xác thực OTP..."
+        );
+        setErrorMessage("");
+        console.log("Đăng ký thành công:", authResponse.data);
+
+        // Chuyển hướng đến trang xác thực OTP sau 1.5 giây
+        setTimeout(() => {
+          navigate("/auth/verify-otp");
+        }, 1500);
+      } else {
+        // Hiển thị thông báo lỗi cụ thể từ API
+
+        // Xử lý riêng cho trường hợp email đã tồn tại
+        if (authResponse.error?.error === "Email already exist") {
+          setErrorMessage(
+            <div>
+              <p>{authResponse.error.message}</p>
+              <p className="mt-2">
+                <button
+                  className="text-red-600 hover:text-red-800 font-semibold underline"
+                  onClick={() => navigate("/login", { state: { email } })}
+                >
+                  Đăng nhập ngay
+                </button>
+              </p>
+            </div>
+          );
+        } else {
+          setErrorMessage(
+            authResponse.error?.message ||
+              "Đăng ký thất bại. Vui lòng thử lại sau."
+          );
+        }
+
+        setSuccessMessage("");
+      }
     } catch (error: unknown) {
-      if (axios.isAxiosError(error) && error.response?.data?.message) {
-        setErrorMessage(error.response.data.message);
+      console.error("Chi tiết lỗi đăng ký:", error);
+
+      if (axios.isAxiosError(error)) {
+        // Lỗi API 400 - Bad Request
+        if (error.response?.status === 400) {
+          // Trích xuất thông báo lỗi từ response
+          const errorMessage =
+            error.response.data?.message ||
+            error.response.data?.error ||
+            "Thông tin đăng ký không hợp lệ";
+          setErrorMessage(errorMessage);
+        }
+        // Lỗi 409 - Conflict (email đã tồn tại)
+        else if (error.response?.status === 409) {
+          setErrorMessage("Email hoặc số điện thoại đã được đăng ký");
+        }
+        // Lỗi server khác
+        else {
+          setErrorMessage(
+            `Lỗi máy chủ: ${error.response?.data?.message || error.message}`
+          );
+        }
       } else if (error instanceof Error) {
         setErrorMessage(error.message);
       } else {
-        setErrorMessage("Đăng ký thất bại");
+        setErrorMessage("Đăng ký thất bại. Vui lòng thử lại sau.");
       }
       setSuccessMessage("");
     }
@@ -65,13 +164,20 @@ const RegisterForm: React.FC = () => {
 
     try {
       const authResponse = await googleLogin(credentialResponse.credential);
-      localStorage.setItem("accessToken", authResponse.accessToken);
-      localStorage.setItem("refreshToken", authResponse.refreshToken);
 
-      setSuccessMessage("Đăng nhập Google thành công!");
-      setErrorMessage("");
-      console.log("Đăng nhập Google thành công:", authResponse);
-      navigate("/");
+      if (authResponse.success && authResponse.data) {
+        localStorage.setItem("accessToken", authResponse.data.accessToken);
+        localStorage.setItem("refreshToken", authResponse.data.refreshToken);
+
+        setSuccessMessage("Đăng nhập Google thành công!");
+        setErrorMessage("");
+        console.log("Đăng nhập Google thành công:", authResponse.data);
+        navigate("/");
+      } else {
+        setErrorMessage(
+          authResponse.error?.message || "Đăng nhập Google thất bại"
+        );
+      }
     } catch (error: unknown) {
       console.error("Lỗi đăng nhập Google:", error);
       if (axios.isAxiosError(error) && error.response?.data?.message) {
@@ -87,13 +193,20 @@ const RegisterForm: React.FC = () => {
   const handleFacebookLogin = async (response: { accessToken: string }) => {
     try {
       const authResponse = await facebookLogin(response.accessToken);
-      localStorage.setItem("accessToken", authResponse.accessToken);
-      localStorage.setItem("refreshToken", authResponse.refreshToken);
 
-      setSuccessMessage("Đăng nhập Facebook thành công!");
-      setErrorMessage("");
-      console.log("Đăng nhập Facebook thành công:", authResponse);
-      navigate("/");
+      if (authResponse.success && authResponse.data) {
+        localStorage.setItem("accessToken", authResponse.data.accessToken);
+        localStorage.setItem("refreshToken", authResponse.data.refreshToken);
+
+        setSuccessMessage("Đăng nhập Facebook thành công!");
+        setErrorMessage("");
+        console.log("Đăng nhập Facebook thành công:", authResponse.data);
+        navigate("/");
+      } else {
+        setErrorMessage(
+          authResponse.error?.message || "Đăng nhập Facebook thất bại"
+        );
+      }
     } catch (error: unknown) {
       console.error("Lỗi đăng nhập Facebook:", error);
       if (axios.isAxiosError(error) && error.response?.data?.message) {
@@ -109,21 +222,27 @@ const RegisterForm: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#800000] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-lg">
-        <div className="text-center mb-6">
-          <img
-            src="/assets/gif/NỀN.gif"
-            alt="Characters"
-            className="w-full rounded"
-          />
-        </div>
+        <div className="flex flex-col items-center mb-6">
+          {/* Logo hình tròn */}
+          <div className="w-20 h-20 rounded-full overflow-hidden bg-white p-1 shadow-lg mb-4">
+            <img
+              src={logo}
+              alt="Cinema Logo"
+              className="w-full h-full object-contain rounded-full"
+            />
+          </div>
 
-        <h2 className="text-center text-3xl font-bold mb-6 text-gray-800">
-          Tạo tài khoản
-        </h2>
+          <h2 className="text-center text-3xl font-bold mb-2 text-gray-800">
+            Tạo tài khoản
+          </h2>
+          <p className="text-center text-gray-600 mb-4">
+            Đăng ký để trải nghiệm dịch vụ tốt nhất
+          </p>
+        </div>
 
         {errorMessage && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-center">
-            {errorMessage}
+            {typeof errorMessage === "string" ? errorMessage : errorMessage}
           </div>
         )}
         {successMessage && (

@@ -1,6 +1,7 @@
 import React from "react";
 import { useAuth } from "../hooks/useAuth";
 import { Link, useNavigate } from "react-router-dom";
+import logo from "../assets/logo.png"; // Đảm bảo đường dẫn tới hình ảnh logo
 
 const Header: React.FC = () => {
   const { user, logout, isAdmin } = useAuth();
@@ -19,7 +20,13 @@ const Header: React.FC = () => {
         <div className="flex items-center space-x-4">
           {/* Logo */}
           <Link to="/" className="flex items-center">
-            <img src="/path-to-logo.png" alt="Logo" className="w-8 h-8" />
+            <div className="w-8 h-8 rounded-full overflow-hidden bg-white p-0.5 shadow-md">
+              <img
+                src={logo}
+                alt="Cinema Logo"
+                className="w-full h-full object-contain rounded-full"
+              />
+            </div>
           </Link>
         </div>
 
@@ -75,10 +82,10 @@ const Header: React.FC = () => {
       <nav className="bg-[#800000] border-t border-white">
         <ul className="flex justify-center space-x-8 py-2">
           <li className="cursor-pointer hover:text-yellow-300">
-            <Link to="/movies">PHIM</Link>
+            <Link to="/movie">PHIM</Link>
           </li>
           <li className="cursor-pointer hover:text-yellow-300">
-            <Link to="/booking/1">MUA VÉ</Link>
+            <Link to="/booking">MUA VÉ</Link>
           </li>
           <li className="cursor-pointer hover:text-yellow-300">
             <Link to="/promotions">GIẢM GIÁ</Link>

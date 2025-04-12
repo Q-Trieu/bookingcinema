@@ -30,3 +30,11 @@ export const updateUser = async (): Promise<User> => {
     throw new Error("Failed to update user");
   }
 }
+export const changePassword = async (newPassword: string): Promise<void> => {
+  try {
+    await axiosInstance.post("/auth/change-password", { newPassword });
+  } catch (error) {
+    console.error("Error changing password:", error);
+    throw new Error("Failed to change password");
+  }
+}
